@@ -439,13 +439,22 @@ class _CodeFieldState extends State<CodeField> {
         decoration: widget.decoration,
         color: _backgroundCol,
         key: _codeFieldKey,
-        padding: const EdgeInsets.only(left: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.gutterStyle.showGutter) _buildGutter(),
-            Expanded(key: _editorKey, child: editingField),
-          ],
+        padding: EdgeInsets.zero,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.gutterStyle.showGutter) _buildGutter(),
+              const VerticalDivider(
+                width: 0.5,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                key: _editorKey,
+                child: editingField,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -474,9 +483,24 @@ class _CodeFieldState extends State<CodeField> {
           ),
     );
 
-    return GutterWidget(
-      codeController: widget.controller,
-      style: gutterStyle,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scrollbarTheme: const ScrollbarThemeData(
+          thickness: WidgetStatePropertyAll(0),
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: gutterStyle.background,
+        ),
+        child: SingleChildScrollView(
+          controller: _numberScroll,
+          child: GutterWidget(
+            codeController: widget.controller,
+            style: gutterStyle,
+          ),
+        ),
+      ),
     );
   }
 
@@ -510,7 +534,7 @@ class _CodeFieldState extends State<CodeField> {
   }
 
   double _getCaretHeight(TextPainter textPainter) {
-    final double? caretFullHeight = textPainter.getFullHeightForCaret(
+    final double caretFullHeight = textPainter.getFullHeightForCaret(
       widget.controller.selection.base,
       Rect.zero,
     );
@@ -573,7 +597,7 @@ class _CodeFieldState extends State<CodeField> {
 
   OverlayEntry _buildSearchOverlay() {
     final colorScheme = Theme.of(context).colorScheme;
-    final borderColor = _getTextColorFromTheme() ?? colorScheme.onBackground;
+    final borderColor = _getTextColorFromTheme() ?? colorScheme.onSurface;
     return OverlayEntry(
       builder: (context) {
         return Positioned(
